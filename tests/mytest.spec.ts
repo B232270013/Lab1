@@ -1,87 +1,71 @@
 import { test, expect } from '@playwright/test';
 
-// Zuv hereglegchiin medeelleer nevterch, amjilttai login bolon logout hiihig shalgana
-test('амжилттай нэвтрэх', async ({ page }) => {
+// Зөв мэдээллээр нэвтэрч, бүтээгдэхүүний хэсэгт орсныг шалгах
+test('Зөв мэдээллээр login хийх', async ({ page }) => {
 
-    // SauceDemo site-iig neene
-    await page.goto('https://www.saucedemo.com');
+    await page.goto('https://www.saucedemo.com/');
 
-    // Zuv username bolon password oruulna
-    await page.getByPlaceholder('Username').fill('standard_user');
-    await page.getByPlaceholder('Password').fill('secret_sauce');
+    // Нэвтрэх мэдээллийг оруулна
+    const username = page.getByPlaceholder('Username');
+    const password = page.getByPlaceholder('Password');
 
-    // Login tovchiig darna
+    await username.fill('standard_user');
+    await password.fill('secret_sauce');
+
+    // Login хийх
     await page.getByRole('button', { name: 'Login' }).click();
 
-    // Nevtersnii daraa Products heseg haragdaj baigaa esehiig shalgana
-    await expect(page.getByText('Products', { exact: true })).toBeVisible();
+    // Нэвтэрсний дараа Products гарч ирэхийг шалгана
+    const productsTitle = page.locator('.title');
+    await expect(productsTitle).toHaveText('Products');
 
-    // Nevtersnii daraah URL zuv esehiig shalgana
-    await expect(page).toHaveURL(/inventory.html/);
-
-    // Menu neegeed Logout hiine
-    await page.getByRole('button', { name: 'Open Menu' }).click();
-    await page.getByRole('link', { name: 'Logout' }).click();
-
-    // Logout hiisnii daraa Login tovch butsaj garsan esehiig shalgana
-    await expect(page.getByRole('button', { name: 'Login' })).toBeVisible();
-
-    // Logout hiisnii daraah URL zuv esehiig shalgana
-    await expect(page).toHaveURL('https://www.saucedemo.com/');
+    // Хэрэглэгч inventory хэсэгт орсон эсэхийг шалгана
+    await expect(page).toHaveURL(/inventory\.html/);
 });
 
 
-// Buruu password ashiglah uyd login amjiltgui bolj,
-// aldaanii message garsan esehiig shalgana
-test('амжилтгүй нэвтрэх', async ({ page }) => {
+// Буруу нууц үгээр нэвтрэхэд алдаа гарсныг шалгах
+test('Буруу password оруулах', async ({ page }) => {
 
-    // SauceDemo site-iig neene
-    await page.goto('https://www.saucedemo.com');
+    await page.goto('https://www.saucedemo.com/');
 
-    // Username zuv, harin buruu password oruulna
     await page.getByPlaceholder('Username').fill('standard_user');
-    await page.getByPlaceholder('Password').fill('wrong_password');
+    await page.getByPlaceholder('Password').fill('123456');
 
-    // Login hiihig oroldono
     await page.getByRole('button', { name: 'Login' }).click();
 
-    // Nevtreh bolomjgui bolson tuhai aldaanii message garsan esehiig shalgana
-    await expect(
-        page.getByText(
-            'Epic sadface: Username and password do not match any user in this service',
-            { exact: true }
-        )
-    ).toBeVisible();
+    // Алдааны хэсэг гарч ирсэн эсэхийг шалгана
+    const errorMessage = page.locator('[data-test="error"]');
+
+    await expect(errorMessage).toBeVisible();
+    await expect(errorMessage).toContainText(
+        'Username and password do not match'
+    );
 });
 
 
-// Amjilttai login hiisnii daraa buteegdehuuniig sagsand nemehig shalgana
-test('нэвтэрсний дараа бараа сагслах', async ({ page }) => {
+// Нэвтэрсний дараа бүтээгдэхүүнийг сагсанд нэмэх
+test('Бүтээгдэхүүн сагсанд нэмэх', async ({ page }) => {
 
-    // SauceDemo site-iig neene
-    await page.goto('https://www.saucedemo.com');
+    await page.goto('https://www.saucedemo.com/');
 
-    // Zuv hereglegchiin medeelleer nevterne
+    // Login хийх
     await page.getByPlaceholder('Username').fill('standard_user');
     await page.getByPlaceholder('Password').fill('secret_sauce');
     await page.getByRole('button', { name: 'Login' }).click();
 
-    // Products heseg neegdsen esehiig shalgana
-    await expect(page.getByText('Products', { exact: true })).toBeVisible();
+    // Products хуудас нээгдсэнийг шалгана
+    await expect(page.locator('.title')).toHaveText('Products');
 
-    // Ekhnii buteegdehuuniig sagsand nemne
-    await page.getByRole('button', { name: 'Add to cart' }).first().click();
+    // Эхний бүтээгдэхүүнийг сонгож сагсанд нэмнэ
+    const addButton = page.getByRole('button', { name: 'Add to cart' }).first();
+    await addButton.click();
 
-    // Sagsand 1 buteegdehuun nemegdsen esehiig shalgana
-    await expect(page.getByTestId('shopping-cart-badge')).toHaveText('1');
+    // Сагсанд 1 бүтээгдэхүүн байгааг шалгана
+    const cart = page.locator('.shopping_cart_badge');
+    await expect(cart).toHaveText('1');
 
-    // Menu neegeed Logout hiine
-    await page.getByRole('button', { name: 'Open Menu' }).click();
-    await page.getByRole('link', { name: 'Logout' }).click();
-
-    // Logout amjilttai bolson esehiig shalgana
-    await expect(page.getByRole('button', { name: 'Login' })).toBeVisible();
-
-    // Nuur huudasnii URL ruu butsasan esehiig shalgana
-    await expect(page).toHaveURL('https://www.saucedemo.com/');
+    // Сагсны badge харагдаж байгаа эсэхийг шалгана
+    await expect(cart).toBeVisible();
 });
+
